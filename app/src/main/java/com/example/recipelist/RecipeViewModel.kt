@@ -32,4 +32,12 @@ class RecipeViewModel: ViewModel(){
             }
         }
     }
+    fun removeRecipe(recipe: MyRecipe){
+        recipes = recipes.filterNot { it.id == recipe.id }
+    }
+    fun toggleFavorite(recipe: MyRecipe){
+        recipes =recipes.map { r->
+                if ( r.id == recipe.id) r.copy (isLiked = !r.isLiked) else r
+        }
+    }
 }

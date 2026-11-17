@@ -24,7 +24,8 @@ data class MyRecipe(
     val image: String,
     val rating: Double,
     val reviewCount: Int,
-    val mealType: List<String>
+    val mealType: List<String>,
+    val isLiked : Boolean = false
 )
 
 enum class Difficulty {

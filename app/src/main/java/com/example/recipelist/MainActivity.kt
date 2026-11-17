@@ -23,17 +23,24 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.recipelist.ui.theme.RecipeListTheme
 
 class MainActivity : ComponentActivity() {
@@ -85,14 +92,16 @@ fun RecipeScreen(viewModel: RecipeViewModel = viewModel()) {
                     ) {
                         items(viewModel.recipes, key = { it.id }) { recipe ->
                             RecipeCard(
-                                recipe = recipe, // 👈 исправлено
+                                recipe = recipe,
                                 onItemClick = {
                                     Toast.makeText(
                                         context,
                                         recipe.name,
                                         Toast.LENGTH_LONG
                                     ).show()
-                                }
+                                },
+                                onItemLongClick ={  viewModel.removeRecipe(recipe) },
+                                onFavoriteItemClick ={ viewModel.toggleFavorite(recipe)}
                             )
                         }
                     }
@@ -102,50 +111,69 @@ fun RecipeScreen(viewModel: RecipeViewModel = viewModel()) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RecipeCard(
     recipe: MyRecipe,
-    onItemClick: () -> Unit
+    onItemClick: () -> Unit,
+    onItemLongClick: () -> Unit,
+    onFavoriteItemClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = onItemClick
+                onClick = onItemClick,
+                onLongClick = onItemLongClick,
             ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
+        AsyncImage(
+            model = recipe.image,
+            contentDescription = recipe.name,
+            modifier = Modifier.fillMaxWidth().height(220.dp),
+            contentScale = ContentScale.Crop
+
+        )
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = recipe.name,
-                style = MaterialTheme.typography.titleMedium,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
+             Text(
+                 text = recipe.cuisine,
+                 fontSize = 16.sp,
+             )
+             Spacer(modifier = Modifier.height(12.dp))
+             Row(
+                 modifier = Modifier.fillMaxWidth(),
+                 horizontalArrangement = Arrangement.spacedBy(12.dp),
+                 verticalAlignment = Alignment.CenterVertically
+             ) {
+                 Text("prep: ${recipe.prepTimeMinutes} min", fontSize = 14.sp)
+                 Text("cook: ${recipe.cookTimeMinutes} min", fontSize = 14.sp)
+                 Text("servings: ${recipe.servings}", fontSize = 14.sp)
+                 IconButton(onClick = onFavoriteItemClick) {
+                     Icon(
+                         painter = painterResource(
+                             if (recipe.isLiked) R.drawable.baseline_favorite_24
+                             else R.drawable.outline_favorite_24
+                         ),
+                         contentDescription = if (recipe.isLiked) "remove from liked" else "add to liked",
+                         tint = if (recipe.isLiked) Color.Red
+                         else MaterialTheme.colorScheme.onSurfaceVariant
+                     )
+                 }
+             }
 
-            // Раскомментируйте то, что захотите показывать:
-            // Text(
-            //     text = recipe.cuisine,
-            //     style = MaterialTheme.typography.bodyMedium
-            // )
-            // Spacer(modifier = Modifier.height(12.dp))
-            // Row(
-            //     modifier = Modifier.fillMaxWidth(),
-            //     horizontalArrangement = Arrangement.spacedBy(10.dp),
-            //     verticalAlignment = Alignment.CenterVertically
-            // ) {
-            //     Text("prep: ${recipe.prepTimeMinutes} min", style = MaterialTheme.typography.bodySmall)
-            //     Text("cook: ${recipe.cookTimeMinutes} min", style = MaterialTheme.typography.bodySmall)
-            //     Text("servings: ${recipe.servings}", style = MaterialTheme.typography.bodySmall)
-            // }
-            //
-            // Spacer(modifier = Modifier.height(8.dp))
-            // Text(
-            //     text = "Теги: ${recipe.tags.joinToString(", ")}",
-            //     style = MaterialTheme.typography.labelSmall,
-            //     color = MaterialTheme.colorScheme.primary
-            // )
+             Spacer(modifier = Modifier.height(8.dp))
+             Text(
+                 text = "Теги: ${recipe.tags.joinToString(", ")}",
+                 fontSize = 14.sp,
+                 color = MaterialTheme.colorScheme.primary
+             )
+
         }
     }
 }
@@ -183,7 +211,8 @@ fun RecipePreview() {
         image = "https://cdn.dummyjson.com/recipe-images/1.webp",
         rating = 4.6,
         reviewCount = 98,
-        mealType = listOf("Dinner")
+        mealType = listOf("Dinner"),
+        isLiked = false
     )
-    RecipeCard(recipe = sampleRecipe, onItemClick = {} )
+    RecipeCard(recipe = sampleRecipe, onItemClick = {} , onItemLongClick = {}, onFavoriteItemClick = {})
 }
